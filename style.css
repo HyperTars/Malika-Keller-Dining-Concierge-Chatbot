@@ -1,9 +1,4 @@
-/*--------------------
-Mixins
---------------------*/
-/*--------------------
-Body
---------------------*/
+
 *,
 *::before,
 *::after {
@@ -67,7 +62,7 @@ Chat Title
   z-index: 2;
   background: rgba(0, 0, 0, 0.3);
   color: #fff;
-  text-transform: uppercase;
+  /* text-transform: uppercase; */
   text-align: left;
   padding: 10px 10px 10px 50px;
 }
@@ -286,7 +281,7 @@ Message Box
   color: #fff;
   border: none;
   background: #10addb;
-  font-size: 16px;
+  font-size: 13px;
   text-transform: uppercase;
   line-height: 1;
   padding: 6px 10px;

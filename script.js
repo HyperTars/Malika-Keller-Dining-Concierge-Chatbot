@@ -99,7 +99,7 @@ $(window).on('keydown', function(e) {
 })
 
 var Fake = [
-  'Hi there, I\'m Dino! I am NYC\'s premier Concierge ChatBot.',
+  'Hi there, I\'m Greg! I am NYC\'s premier Concierge ChatBot.',
    
 ]
 
