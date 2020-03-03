@@ -1,8 +1,9 @@
 import requests
 import csv
 import time
-import simplejson as json
 import boto3
+import simplejson as json
+import pandas as pd
 from datetime import datetime
 from decimal import Decimal
 
@@ -100,3 +101,8 @@ for area in MANHATTAN_AREAS:
     # finsih area restaurants data
     writeCSV(area_restaurants)
     print('Finish', area, ' Area time spent:', time.time() - temp, ' Total time spent:', time.time() - start)
+
+# delete redundant headers
+csv_data = pd.read_csv('yelp_restaurants_raw.csv')
+csv_data = csv_data[~csv_data['Business_ID'].str.contains('Business_ID')]
+csv_data.to_csv('yelp_restaurants_raw.csv', index=False)
