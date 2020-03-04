@@ -8,46 +8,46 @@ from decimal import Decimal
 
 # constants #
 # AWS config
-DB_REGION = 'us-east-1'
-TABLE_NAME = 'Yelp_Restaurants'
-PRIMARY_KEY = 'RestaurantID'
+AWS_DB_REGION = 'us-east-1'
+AWS_TABLE_NAME = 'Yelp_Restaurants'
+AWS_PRIMARY_KEY = 'RestaurantID'
 
 # local csv config
 CSV_FILE = 'Yelp_Restaurants.csv'
-CSV_HEAD = [PRIMARY_KEY, 'Name', 'Cuisine', 'Rating', 'NumberOfReviews',
+CSV_HEAD = [AWS_PRIMARY_KEY, 'Name', 'Cuisine', 'Rating', 'NumberOfReviews',
             'Address', 'ZipCode', 'Latitude', 'Longitude', 'IsClosed',
             'InsertTime']
 
 # Yelp API config
-API_KEY = 'c9R-lxzMB2pLkv_i-3KskCPRTbzj0ilRPFW2NWaUzxph7HSpVW_qBL-vnbvX15O28mJK1x4WpU6MnvVZ8siYfAGN09kN2sPpZpLbzJAMA8-3GbLWiLQAFQ-6Oq5eXnYx'
-CLIENT_ID = 'paqI8bHTDXVPNcfhWU1C5w'
+YELP_API_KEY = 'c9R-lxzMB2pLkv_i-3KskCPRTbzj0ilRPFW2NWaUzxph7HSpVW_qBL-vnbvX15O28mJK1x4WpU6MnvVZ8siYfAGN09kN2sPpZpLbzJAMA8-3GbLWiLQAFQ-6Oq5eXnYx'
+YELP_CLIENT_ID = 'paqI8bHTDXVPNcfhWU1C5w'
 
-ENDPOINT = 'https://api.yelp.com/v3/businesses/search'
-ENDPOINT_ID = 'https://api.yelp.com/v3/businesses/' + CLIENT_ID
-HEADERS = {'Authorization': 'bearer %s' % API_KEY}
+YELP_ENDPOINT = 'https://api.yelp.com/v3/businesses/search'
+YELP_ENDPOINT_ID = 'https://api.yelp.com/v3/businesses/' + YELP_CLIENT_ID
+YELP_REQ_HEADERS = {'Authorization': 'bearer %s' % YELP_API_KEY}
 
-PARAMETERS = {
+YELP_REQ_PARAMETERS = {
     'term': 'food',
     'limit': 50,
     'radius': 15000,
     'offset': 200,
     'location': 'Manhattan'}
 
-CUISINES = ['italian', 'chinese', 'mexican', 'american', 'japanese', 'pizza',
-            'healthy', 'brunch', 'korean', 'thai', 'vietnamese', 'indian',
-            'seafood', 'dessert']
+YELP_REQ_CUISINES = ['italian', 'chinese', 'mexican', 'american', 'japanese',
+                     'pizza', 'healthy', 'brunch', 'korean', 'thai',
+                     'vietnamese', 'indian', 'seafood', 'dessert']
 
-AREAS = ['Lower East Side, Manhattan',
-         'Upper East Side, Manhattan',
-         'Upper West Side, Manhattan',
-         'Washington Heights, Manhattan',
-         'Central Harlem, Manhattan',
-         'Chelsea, Manhattan',
-         'Manhattan',
-         'East Harlem, Manhattan',
-         'Gramercy Park, Manhattan',
-         'Greenwich, Manhattan',
-         'Lower Manhattan, Manhattan']
+YELP_REQ_AREAS = ['Lower East Side, Manhattan',
+                  'Upper East Side, Manhattan',
+                  'Upper West Side, Manhattan',
+                  'Washington Heights, Manhattan',
+                  'Central Harlem, Manhattan',
+                  'Chelsea, Manhattan',
+                  'Manhattan',
+                  'East Harlem, Manhattan',
+                  'Gramercy Park, Manhattan',
+                  'Greenwich, Manhattan',
+                  'Lower Manhattan, Manhattan']
 
 
 # check data
@@ -67,25 +67,32 @@ def writeCSV(data):
 
 
 # init
-dynamodb = boto3.resource('dynamodb', region_name=DB_REGION)
-table = dynamodb.Table(TABLE_NAME)
+dynamodb = boto3.resource('dynamodb', region_name=AWS_DB_REGION)
+table = dynamodb.Table(AWS_TABLE_NAME)
 start = time.time()
 temp = start
-idx = 1
+area_idx = 1
+total_item = 0
 
 # get data
-for area in AREAS:
+for area in YELP_REQ_AREAS:
     # itr each area
-    PARAMETERS['location'] = area
+    YELP_REQ_PARAMETERS['location'] = area
     temp = time.time()
     area_restaurants = []
+    area_item = 0
 
     # itr each cuisine
-    for cuisine in CUISINES:
-        PARAMETERS['term'] = cuisine
-        response = requests.get(url=ENDPOINT,
-                                params=PARAMETERS,
-                                headers=HEADERS)
+    for cuisine in YELP_REQ_CUISINES:
+        YELP_REQ_PARAMETERS['term'] = cuisine
+        response = requests.get(url=YELP_ENDPOINT,
+                                params=YELP_REQ_PARAMETERS,
+                                headers=YELP_REQ_HEADERS)
+        try:
+            business_data = response.json()['businesses']
+        except 'businesses' not in response.json():
+            print ('Yelp API Request/Return Error')
+
         business_data = response.json()['businesses']
 
         # process request
@@ -106,12 +113,15 @@ for area in AREAS:
             # write restaurant data to DynamoDB and local area restaurants list
             area_restaurants.append(item)
             table.put_item(Item=item)
+            area_item += 1
+            total_item += 1
 
     # finsih area restaurants data
     writeCSV(area_restaurants)
-    print ('(%d/11) "%s" finished, time spent: %ds, total time: %ds' %
-           (idx, area, int(time.time() - temp), int(time.time() - start)))
-    idx += 1
+    print ('(%d/11) "%s" finished, item count: %d, time spent: %ds, \
+           total time: %ds, total item: %d' % (area_idx, area, area_item,
+           int(time.time() - temp), int(time.time() - start), total_item))
+    area_idx += 1
 
 # delete redundant headers
 csv_data = pd.read_csv(CSV_FILE)
