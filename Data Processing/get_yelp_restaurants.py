@@ -9,10 +9,14 @@ from decimal import Decimal
 
 # constants
 DB_REGION = 'us-east-1'
-TABLE_NAME = 'yelp_restaurants'
+TABLE_NAME = 'Yelp_Restaurants'
+CSV_FILE = 'Yelp_Restaurants.csv'
 
 API_KEY = 'c9R-lxzMB2pLkv_i-3KskCPRTbzj0ilRPFW2NWaUzxph7HSpVW_qBL-vnbvX15O28mJK1x4WpU6MnvVZ8siYfAGN09kN2sPpZpLbzJAMA8-3GbLWiLQAFQ-6Oq5eXnYx'
 CLIENT_ID = 'paqI8bHTDXVPNcfhWU1C5w'
+
+CSV_HEADERS = ['RestaurantID', 'Name', 'Cuisine', 'Rating', 'NumberOfReviews', 
+        'Address', 'ZipCode', 'Latitude', 'Longitude', 'IsClosed', 'InsertTime']
 
 ENDPOINT = 'https://api.yelp.com/v3/businesses/search'
 ENDPOINT_ID = 'https://api.yelp.com/v3/businesses/' + CLIENT_ID
@@ -41,9 +45,6 @@ MANHATTAN_AREAS = ['Lower East Side, Manhattan',
         'Greenwich, Manhattan',
         'Lower Manhattan, Manhattan']
 
-CSV_HEADERS = ['Business_ID', 'Name', 'Cuisine', 'Rating', 'Number of Reviews', 'Address',
-        'Zip Code', 'Latitude', 'Longitude', 'isClosed', 'insertedAtTimestamp']
-
 
 # check data
 def isValid(input):
@@ -55,7 +56,7 @@ def isValid(input):
 
 # write to CSV file
 def writeCSV(data):
-    with open('yelp_restaurants_raw.csv', 'a+', newline='', encoding='utf-8') as f:
+    with open(CSV_FILE, 'a+', newline='', encoding='utf-8') as f:
         f_csv = csv.DictWriter(f, CSV_HEADERS)
         f_csv.writeheader()
         f_csv.writerows(data)
@@ -82,17 +83,17 @@ for area in MANHATTAN_AREAS:
         # resolve request
         for business in business_data:
             time_string = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-            item = {'Business_ID': isValid(business['id']),
-                    'Name': isValid(business['name']),
-                    'Cuisine': isValid(cuisine),
-                    'Rating': isValid(Decimal(business['rating'])),
-                    'Number of Reviews': isValid(Decimal(business['review_count'])),
-                    'Address': isValid(business['location']['address1']),
-                    'Zip Code': isValid(business['location']['zip_code']),
-                    'Latitude': isValid(str(business['coordinates']['latitude'])),
-                    'Longitude': isValid(str(business['coordinates']['longitude'])),
-                    'isClosed': isValid(str(business['is_closed'])),
-                    'insertedAtTimestamp': isValid(time_string)}
+            item = {CSV_HEADERS[0]: isValid(business['id']),
+                    CSV_HEADERS[1]: isValid(business['name']),
+                    CSV_HEADERS[2]: isValid(cuisine),
+                    CSV_HEADERS[3]: isValid(Decimal(business['rating'])),
+                    CSV_HEADERS[4]: isValid(Decimal(business['review_count'])),
+                    CSV_HEADERS[5]: isValid(business['location']['address1']),
+                    CSV_HEADERS[6]: isValid(business['location']['zip_code']),
+                    CSV_HEADERS[7]: isValid(str(business['coordinates']['latitude'])),
+                    CSV_HEADERS[8]: isValid(str(business['coordinates']['longitude'])),
+                    CSV_HEADERS[9]: isValid(str(business['is_closed'])),
+                    CSV_HEADERS[10]: isValid(time_string)}
 
             # write restaurant data to DynamoDB and local area restaurants list
             area_restaurants.append(item)
@@ -100,9 +101,9 @@ for area in MANHATTAN_AREAS:
 
     # finsih area restaurants data
     writeCSV(area_restaurants)
-    print('Finish', area, ' Area time spent:', time.time() - temp, ' Total time spent:', time.time() - start)
+    print('Finish', area, ' Area_time_spent:', time.time() - temp, ' Total_time_spent:', time.time() - start)
 
 # delete redundant headers
-csv_data = pd.read_csv('yelp_restaurants_raw.csv')
-csv_data = csv_data[~csv_data['Business_ID'].str.contains('Business_ID')]
-csv_data.to_csv('yelp_restaurants_raw.csv', index=False)
+csv_data = pd.read_csv(CSV_FILE)
+csv_data = csv_data[~csv_data[CSV_HEADERS[0]].str.contains(CSV_HEADERS[0])]
+csv_data.to_csv(CSV_FILE, index=False)

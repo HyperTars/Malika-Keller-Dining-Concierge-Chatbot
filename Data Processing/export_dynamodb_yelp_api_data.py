@@ -1,3 +1,7 @@
+'''
+OLD FILE CAN BE DELETED
+'''
+
 from collections import defaultdict
 import requests
 import csv
