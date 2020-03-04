@@ -9,7 +9,7 @@ from decimal import Decimal
 
 # constants #
 # AWS config
-AWS_DB_REGION = 'us-west-1'
+AWS_DB_REGION = 'us-east-1'
 AWS_TABLE_NAME = 'Yelp_Restaurants'
 AWS_PRIMARY_KEY = 'RestaurantID'
 
