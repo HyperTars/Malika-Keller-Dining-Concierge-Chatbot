@@ -14,6 +14,7 @@ The generated SDK depends on third-party libraries. Include all of the scripts i
     <script type="text/javascript" src="lib/apiGatewayCore/utils.js"></script>
     <script type="text/javascript" src="apigClient.js"></script>
 
+
 # Use the SDK in your project
 
 To initialize the most basic form of the SDK:
