@@ -7,6 +7,7 @@ YELP_CSV = 'Yelp_Restaurants.csv'
 YELP_ES_CSV = 'Yelp_Restaurants_Elastic_Search.csv'
 YELP_ES_JSON = 'Yelp_Elastic_Search.json'
 END_POINT = 'https://search-yelp-restaurants-catcjjrqnh7ynnm3rc7inpu7ky.us-east-1.es.amazonaws.com'
+# END_POINT = 'https://search-yelp-restaurants-qbilabfsrw4mpkj7lod4ptr4ye.us-east-2.es.amazonaws.com'
 
 yelp_csv = pd.read_csv(YELP_CSV)
 yelp_es_list = []
