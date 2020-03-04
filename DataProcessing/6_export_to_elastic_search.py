@@ -10,9 +10,19 @@ AWS_END_POINT = 'https://search-yelp-restaurants-catcjjrqnh7ynnm3rc7inpu7ky.us-e
 AWS_JSON_KEY = 'Restaurant'
 AWS_ES_KEY = 'RestaurantID'
 AWS_ES_VAL = 'Cuisine'
+XPUT_FILE = 'xput.txt'
 
 yelp_csv = pd.read_csv(YELP_CSV)
 yelp_es_list = []
+
+
+# Write XPUT
+def writeXPUT(row):
+    with open(XPUT_FILE, 'a+') as f:
+        f.write(row)
+        f.write('\n')
+    f.close
+
 
 # create csv for elastic search
 if os.path.exists(YELP_ES_CSV):
@@ -47,26 +57,19 @@ f.close()
 yelp_es_csv = pd.read_csv(YELP_ES_CSV)
 
 # XPUT
+if os.path.exists(XPUT_FILE):
+    os.remove(XPUT_FILE)
 for i in range(len(yelp_es_csv)):
     initial = "curl -XPUT %s/restaurants/%s/%d -d '" % (
-        AWS_END_POINT, AWS_JSON_KEY, i)
+        AWS_END_POINT, AWS_JSON_KEY, i + 1)
     middle = '{"%s": "%s", "%s": "%s"}' % (
         AWS_ES_KEY, yelp_es_csv[AWS_ES_KEY][i],
         AWS_ES_VAL, yelp_es_csv[AWS_ES_VAL][i])
     final = "' -H 'Content-Type: application/json'"
     full = initial + middle + final
-    os.system(full)
+    writeXPUT(full)
+    # os.system(full)
 
-for i in range(1, 5):
-    initial = "curl -XPUT %s/restaurants/%s/%d -d '" % (
-        AWS_END_POINT, AWS_JSON_KEY, i)
-    middle = '{"%s": "%s", "%s": "%s"}' % (
-        AWS_ES_KEY, AWS_ES_KEY,
-        AWS_ES_VAL, AWS_ES_VAL)
-    final = "' -H 'Content-Type: application/json'"
-    full = initial + middle + final
-    print (full)
-# XGET
 
 # curl -XPUT https://search-yelp-restaurants-catcjjrqnh7ynnm3rc7inpu7ky.us-east-1.es.amazonaws.com/restaurants/Restaurant/1 -d '{"RestaurantID": "RestaurantID", "Cuisine": "Cuisine"}' -H 'Content-Type: application/json'
 # curl -XGET 'https://search-yelp-search-catcjjrqnh7ynnm3rc7inpu7ky.us-east-1.es.amazonaws.com/restaurants/_search?q=chinese'
