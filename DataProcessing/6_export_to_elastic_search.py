@@ -1,29 +1,35 @@
 import pandas as pd
-import ipdb
 import json
 import os
 
 YELP_CSV = 'Yelp_Restaurants.csv'
 YELP_ES_CSV = 'Yelp_Restaurants_Elastic_Search.csv'
 YELP_ES_JSON = 'Yelp_Elastic_Search.json'
-END_POINT = 'https://search-yelp-restaurants-catcjjrqnh7ynnm3rc7inpu7ky.us-east-1.es.amazonaws.com'
-# END_POINT = 'https://search-yelp-restaurants-qbilabfsrw4mpkj7lod4ptr4ye.us-east-2.es.amazonaws.com'
+AWS_END_POINT = 'https://search-yelp-restaurants-catcjjrqnh7ynnm3rc7inpu7ky.us-east-1.es.amazonaws.com'
+# AWS_END_POINT = 'https://search-yelp-restaurants-qbilabfsrw4mpkj7lod4ptr4ye.us-east-2.es.amazonaws.com'
+AWS_JSON_KEY = 'Restaurant'
+AWS_ES_KEY = 'RestaurantID'
+AWS_ES_VAL = 'Cuisine'
 
 yelp_csv = pd.read_csv(YELP_CSV)
 yelp_es_list = []
 
 # create csv for elastic search
+if os.path.exists(YELP_ES_CSV):
+    os.remove(YELP_ES_CSV)
 yelp_es_csv = pd.DataFrame()
-yelp_es_csv = (yelp_csv.loc[:, ['RestaurantID', 'Cuisine']])
+yelp_es_csv = (yelp_csv.loc[:, [AWS_ES_KEY, AWS_ES_VAL]])
 yelp_es_csv.to_csv(path_or_buf=YELP_ES_CSV, index=False)
 
 # create json for elastic search
+if os.path.exists(YELP_ES_JSON):
+    os.remove(YELP_ES_JSON)
 index = 0
 for i in range(len(yelp_csv)):
     temp = {}
-    temp['Restaurant'] = {}
-    temp['Restaurant']['RestaurantID'] = yelp_csv['RestaurantID'][i]
-    temp['Restaurant']['Cuisine'] = yelp_csv['Cuisine'][i]
+    temp[AWS_JSON_KEY] = {}
+    temp[AWS_JSON_KEY][AWS_ES_KEY] = yelp_csv[AWS_ES_KEY][i]
+    temp[AWS_JSON_KEY][AWS_ES_VAL] = yelp_csv[AWS_ES_VAL][i]
     yelp_es_list.append(temp)
 
 with open(YELP_ES_JSON, 'w+') as f:
@@ -40,14 +46,31 @@ f.close()
 # es_CSV = pd
 yelp_es_csv = pd.read_csv(YELP_ES_CSV)
 
+# XPUT
 for i in range(len(yelp_es_csv)):
-    endpoint = END_POINT + '/restaurants/Restaurant/' + str(i)
-    initial = 'curl -XPUT ' + END_POINT + '/restaurants/Restaurant/{} -d '.format(i)
-    middle = "'" + "{" + '"RestaurantID": "{}", "Cuisine": "{}"'.format(
-            yelp_es_csv['RestaurantID'][i], yelp_es_csv['Cuisine'][i]) + "}" + "' "
-    final = "-H " + "'" + "Content-Type: application/json" + "'"
+    initial = "curl -XPUT %s/restaurants/%s/%d -d '" % (
+        AWS_END_POINT, AWS_JSON_KEY, i)
+    middle = '{"%s": "%s", "%s": "%s"}' % (
+        AWS_ES_KEY, yelp_es_csv[AWS_ES_KEY][i],
+        AWS_ES_VAL, yelp_es_csv[AWS_ES_VAL][i])
+    final = "' -H 'Content-Type: application/json'"
     full = initial + middle + final
     os.system(full)
+
+for i in range(1, 5):
+    initial = "curl -XPUT %s/restaurants/%s/%d -d '" % (
+        AWS_END_POINT, AWS_JSON_KEY, i)
+    middle = '{"%s": "%s", "%s": "%s"}' % (
+        AWS_ES_KEY, AWS_ES_KEY,
+        AWS_ES_VAL, AWS_ES_VAL)
+    final = "' -H 'Content-Type: application/json'"
+    full = initial + middle + final
+    print (full)
+# XGET
+
+# curl -XPUT https://search-yelp-restaurants-catcjjrqnh7ynnm3rc7inpu7ky.us-east-1.es.amazonaws.com/restaurants/Restaurant/1 -d '{"RestaurantID": "RestaurantID", "Cuisine": "Cuisine"}' -H 'Content-Type: application/json'
+# curl -XGET 'https://search-yelp-search-catcjjrqnh7ynnm3rc7inpu7ky.us-east-1.es.amazonaws.com/restaurants/_search?q=chinese'
+
 
 '''
 {

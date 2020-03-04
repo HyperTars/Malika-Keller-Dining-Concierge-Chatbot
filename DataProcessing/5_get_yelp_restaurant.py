@@ -3,12 +3,13 @@ import csv
 import time
 import boto3
 import pandas as pd
+import os
 from datetime import datetime
 from decimal import Decimal
 
 # constants #
 # AWS config
-AWS_DB_REGION = 'us-east-1'
+AWS_DB_REGION = 'us-west-1'
 AWS_TABLE_NAME = 'Yelp_Restaurants'
 AWS_PRIMARY_KEY = 'RestaurantID'
 
@@ -69,6 +70,8 @@ def writeCSV(data):
 # init
 dynamodb = boto3.resource('dynamodb', region_name=AWS_DB_REGION)
 table = dynamodb.Table(AWS_TABLE_NAME)
+if os.path.exists(CSV_FILE):
+    os.remove(CSV_FILE)
 start = time.time()
 temp = start
 area_idx = 1
@@ -118,9 +121,8 @@ for area in YELP_REQ_AREAS:
 
     # finsih area restaurants data
     writeCSV(area_restaurants)
-    print ('(%d/11) "%s" finished, item count: %d, time spent: %ds, \
-           total time: %ds, total item: %d' % (area_idx, area, area_item,
-           int(time.time() - temp), int(time.time() - start), total_item))
+    print ('(%d/11) "%s" finished, item count: %d, time spent: %ds, total time: %ds, total item: %d'
+           % (area_idx, area, area_item, int(time.time() - temp), int(time.time() - start), total_item))
     area_idx += 1
 
 # delete redundant headers
