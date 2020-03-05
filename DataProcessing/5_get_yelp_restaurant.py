@@ -9,7 +9,7 @@ from decimal import Decimal
 
 # constants #
 # AWS config
-AWS_DB_REGION = 'us-east-2'
+AWS_DB_REGION = 'us-east-1'
 AWS_TABLE_NAME = 'Yelp_Restaurants'
 AWS_PRIMARY_KEY = 'RestaurantID'
 
@@ -221,6 +221,6 @@ def uploadToDynamoDB():
 
 
 # Process #
-#getDataFromYelp()
-#formatCSV()
+getDataFromYelp()
+formatCSV()
 uploadToDynamoDB()
