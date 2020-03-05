@@ -26,9 +26,6 @@ body {
   left: 0;
   z-index: 1;
   background: #6da2ce;
-
-  -webkit-transform: scale(1.5);
-          transform: scale(1.5);
 }
 
 /*--------------------
@@ -40,8 +37,9 @@ Chat
   left: 50%;
   -webkit-transform: translate(-50%, -50%);
           transform: translate(-50%, -50%);
-  width: 800px;
-  height: 80vh;
+  width: 100%;
+  max-width: 800px;
+  height: 95vh;
   max-height: 1000px;
   z-index: 2;
   overflow: hidden;
