@@ -11,8 +11,8 @@ YELP_ES_JSON = 'Yelp_Elastic_Search.json'
 AWS_EAST_1 = 'https://search-yelp-restaurants-catcjjrqnh7ynnm3rc7inpu7ky.us-east-1.es.amazonaws.com'
 AWS_EAST_2 = 'https://search-yelp-restaurants-qbilabfsrw4mpkj7lod4ptr4ye.us-east-2.es.amazonaws.com'
 AWS_ES_END_POINT = AWS_EAST_1
-AWS_ES_INDICE = 'restaurants'
-AWS_ES_MAP = 'Restaurant'
+AWS_ES_INDEX = 'restaurants'
+AWS_ES_ENTRY = 'Restaurant'
 AWS_ES_KEY = 'RestaurantID'
 AWS_ES_VAL = 'Cuisine'
 XPUT_FILE = 'xput.txt'
@@ -41,17 +41,17 @@ if os.path.exists(YELP_ES_JSON):
     os.remove(YELP_ES_JSON)
 for i in range(len(yelp_csv)):
     temp = {}
-    temp[AWS_ES_MAP] = {}
-    temp[AWS_ES_MAP][AWS_ES_KEY] = yelp_csv[AWS_ES_KEY][i]
-    temp[AWS_ES_MAP][AWS_ES_VAL] = yelp_csv[AWS_ES_VAL][i]
+    temp[AWS_ES_ENTRY] = {}
+    temp[AWS_ES_ENTRY][AWS_ES_KEY] = yelp_csv[AWS_ES_KEY][i]
+    temp[AWS_ES_ENTRY][AWS_ES_VAL] = yelp_csv[AWS_ES_VAL][i]
     yelp_es_list.append(temp)
 index = 0
 with open(YELP_ES_JSON, 'w+') as f:
     # json.dump(yelp_es, f)
     for row in yelp_es_list:
-        f.write('{ \"index\" : { \"_index\": \"' + AWS_ES_INDICE
+        f.write('{ \"index\" : { \"_index\": \"' + AWS_ES_INDEX
                 + '\", \"_type\" : \"'
-                + AWS_ES_MAP + '\", \"_id\" : \"')
+                + AWS_ES_ENTRY + '\", \"_id\" : \"')
         f.write(str(index))
         f.write("\" } }\n")
         json.dump(yelp_es_list[index], f)
@@ -64,7 +64,7 @@ if os.path.exists(XPUT_FILE):
     os.remove(XPUT_FILE)
 for i in range(len(yelp_es_csv)):
     initial = "curl -XPUT %s/%s/%s/%d -d '" % (
-        AWS_ES_END_POINT, AWS_ES_INDICE, AWS_ES_MAP, i + 1)
+        AWS_ES_END_POINT, AWS_ES_INDEX, AWS_ES_ENTRY, i + 1)
     middle = '{"%s": "%s", "%s": "%s"}' % (
         AWS_ES_KEY, yelp_es_csv[AWS_ES_KEY][i],
         AWS_ES_VAL, yelp_es_csv[AWS_ES_VAL][i])
