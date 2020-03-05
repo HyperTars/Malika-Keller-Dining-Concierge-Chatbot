@@ -1,0 +1,77 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "startSamDebug",
+            "type": "shell",
+            "command": "sam",
+            "args": [
+                "local",
+                "invoke",
+                "HelloWorldFunction", // Replace this with the resource name of your lambda function from your Serverless Application template.yaml file
+                "--template",
+                "${workspaceFolder}/.aws-sam/build/template.yaml", // Replace this with the appropriate workspace-relative path to your Serverless Application template.yaml file
+                "--no-event",
+                "-d",
+                "15858"
+            ],
+            "isBackground": true,
+            "problemMatcher": {
+                "pattern": [
+                    {
+                        // Use regex that never matches anything.
+                        "regexp": "^(x)(\\b)(x)$",
+                        "file": 1,
+                        "location": 2,
+                        "message": 3
+                    }
+                ],
+                "background": {
+                    // This is how the debugger knows when it can attach
+                    "activeOnStart": true,
+                    "beginsPattern": "^Fetching lambci.* Docker container image[.]*$",
+                    "endsPattern": "^Mounting .* as .* inside runtime container$"
+                }
+            },
+            "dependsOn": [
+                // "buildSamPackage"
+            ]
+        },
+        {
+            "label": "buildSamPackage",
+            "type": "process",
+            "command": "sam",
+            "args": [
+                "build",
+                "--use-container"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "tscSamPackage",
+            "type": "process",
+            "command": "npx",
+            "args": [
+                "tsc"
+            ],
+        },
+        {
+            "label": "killSamDebug",
+            "command": ": ${input:killSamDebug}",
+            "type": "shell"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "killSamDebug",
+            "type": "command",
+            "command": "workbench.action.tasks.terminate",
+            "args": "startSamDebug"
+        }
+    ]
+}

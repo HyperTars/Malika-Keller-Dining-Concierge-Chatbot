@@ -1,0 +1,43 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Standalone",
+            "program": "${workspaceFolder}/app.js",
+            "skipFiles": [
+                "node_modules/**/*.js",
+                "lib/**/*.js",
+                "runtime/**/*.js",
+                "async_hooks.js",
+                "inspector_async_hook.js",
+                "<node_internals>/**/*.js"
+            ],
+            "stopOnEntry": false
+        },
+        {
+            "name": "SAM",
+            "type": "node",
+            "request": "attach",
+            "preLaunchTask": "startSamDebug",
+            "postDebugTask": "killSamDebug",
+            "port": 15858,
+            "address": "localhost",
+            "localRoot": "${workspaceFolder}",
+            "remoteRoot": "/var/task",
+            "skipFiles": [
+                "node_modules/**/*.js",
+                "lib/**/*.js",
+                "runtime/**/*.js",
+                "async_hooks.js",
+                "inspector_async_hook.js",
+                "<node_internals>/**/*.js"
+            ],
+            "stopOnEntry": false
+        }
+    ]
+}

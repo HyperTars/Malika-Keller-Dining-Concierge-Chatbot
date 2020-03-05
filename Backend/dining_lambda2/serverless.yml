@@ -1,0 +1,16 @@
+service: example
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+
+functions:
+  dining_lamda2:
+    handler: app.handleLambda
+
+package:
+  exclude:
+    - vscode
+    - package.json
+    - package-lock.json
+    - tsconfig.json
