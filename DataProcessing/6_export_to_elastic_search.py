@@ -79,16 +79,18 @@ def writeXPUT():
 
 def uploadToES():
     for line in open(XPUT_FILE):
-        print(line)
-        #os.system(line)
+        # print(line)
+        os.system(line)
 
 
-generateEScsv()
-generateESjson()
-writeXPUT()
+#generateEScsv()
+#generateESjson()
+#writeXPUT()
 uploadToES()
 
 '''
 curl -XPUT https://search-yelp-restaurants-catcjjrqnh7ynnm3rc7inpu7ky.us-east-1.es.amazonaws.com/restaurants/Restaurant/1 -d '{"RestaurantID": "RestaurantID", "Cuisine": "Cuisine"}' -H 'Content-Type: application/json'
 curl -XGET 'https://search-yelp-restaurants-catcjjrqnh7ynnm3rc7inpu7ky.us-east-1.es.amazonaws.com/restaurants/_search?q=chinese'
 '''
+curl -XDELETE 'https://search-yelp-restaurants-catcjjrqnh7ynnm3rc7inpu7ky.us-east-1.es.amazonaws.com/restaurants/'
+curl -X DELETE "https://search-yelp-restaurants-catcjjrqnh7ynnm3rc7inpu7ky.us-east-1.es.amazonaws.com/restaurants/"  
