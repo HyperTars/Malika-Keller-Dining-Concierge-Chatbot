@@ -13,7 +13,7 @@ logger.setLevel(logging.DEBUG)
 
 
 sqs = boto3.client('sqs')
-queue_url = 'https://sqs.us-east-1.amazonaws.com/899580659559/dining_bot_queue'
+queue_url = 'https://sqs.us-east-1.amazonaws.com/178190676612/asg1-q1'
 
 
 def lambda_handler(event, context):
@@ -33,11 +33,11 @@ def dispatch(intent_request):
     intent_name = intent_request['currentIntent']['name']
 
     # Dispatch to your bot's intent handlers
-    if intent_name == 'GetRestaurant':
+    if intent_name == 'DiningSuggestionsIntent':
         return get_restaurant(intent_request)
-    if intent_name == 'Greeting':
+    if intent_name == 'GreetingIntent':
         return greeting(intent_request)
-    if intent_name == 'Thanking':
+    if intent_name == 'ThankYouIntent':
         return thanking(intent_request)
     raise Exception('Intent with name ' + intent_name + ' not supported')
     
@@ -60,7 +60,7 @@ def greeting(intent_request):
         session_attributes,
         {
             'contentType': 'PlainText',
-            'content': 'How can I be of assistance to you today?'
+            'content': 'Hi! What can I help you today?'
         }
     )
 
@@ -81,10 +81,10 @@ def get_restaurant(intent_request):
         if not validation_result['isValid']:
             slots[validation_result['violatedSlot']] = None
             return elicit_slot(intent_request['sessionAttributes'],
-                               intent_request['currentIntent']['name'],
-                               slots,
-                               validation_result['violatedSlot'],
-                               validation_result['message'])
+                              intent_request['currentIntent']['name'],
+                              slots,
+                              validation_result['violatedSlot'],
+                              validation_result['message'])
         output_session_attributes = intent_request['sessionAttributes'] if intent_request['sessionAttributes'] is not None else {}
 
         return delegate(output_session_attributes, get_slots(intent_request))
@@ -94,7 +94,7 @@ def get_restaurant(intent_request):
     return close(intent_request['sessionAttributes'],
                  'Fulfilled',
                  {'contentType': 'PlainText',
-                  'content': 'Thank you! I have collected a few trendy options for you, I will sent detailed information to your phone:{}'.format(phone_number)})
+                  'content': 'Thank you! I have collected a few trendy options for you. I will send detailed information to your phone:{}'.format(phone_number)})
 
 
 def validate_slots(location,cuisine_type,date,time,number_of_people,name,phone_number):
@@ -142,13 +142,6 @@ def validate_slots(location,cuisine_type,date,time,number_of_people,name,phone_n
                 return build_validation_result(False, 'phone_number', "Please do not input non-number character for phone number.")
 
     return build_validation_result(True, None, None)
-
-
-
-
-
-
-
 
 
 def send_sqs(slots):

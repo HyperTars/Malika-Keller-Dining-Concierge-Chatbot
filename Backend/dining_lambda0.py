@@ -22,13 +22,8 @@ def lambda_handler(event, context):
     else:
         return get_success_response(chatbot_text,user_id)
     
-    # return event
 
 def get_info_from_request(event):
-    # if "body" not in event:
-    #     logger.error("event type error")
-    #     return None,None,-1
-    # body = event["body"]
     body = event
     if "messages" not in body:
         logger.error("body type error")
@@ -91,12 +86,11 @@ def get_success_response(text,user_id):
     return response
     
 def get_chatbot_response(user_id,text):
-    # return "this software is still in develpment, please wait for the update"
     message = ''
     client = boto3.client('lex-runtime')
     lex_response = client.post_text(
-        botName='dinningBot',
-        botAlias='dinningBot',
+        botName='dining_concierge',
+        botAlias='dining_concierge',
         userId=user_id,
         inputText=text
     )
