@@ -13,7 +13,11 @@ const es = new elasticsearch.Client({
 } as any);
 const TableName = 'Yelp_Restaurants';
 const dynamodb = new AWS.DynamoDB.DocumentClient();
-const sns = new AWS.SNS();
+const sns = process.env['SNS_ACC_KEY_ID'] && process.env['SNS_ACC_KEY_SEC'] ? new AWS.SNS({
+    // new accounts may have a limit on sms available per day (15)
+    // workaround: use multiple accounts
+    credentials: new AWS.Credentials(process.env['SNS_ACC_KEY_ID'], process.env['SNS_ACC_KEY_SEC'])
+}) : new AWS.SNS();
 sns.setSMSAttributes({ attributes: { 'DefaultSMSType': 'Transactional' } });
 
 class MessageAttributesBackend {
@@ -21,6 +25,9 @@ class MessageAttributesBackend {
     Cuisine?: string
     Location?: string
     Name?: string
+    NumberOfPeople?: string
+    DiningDate?: string
+    DiningTime?: string
     PhoneNumber?: string
     Responses?: AWS.DynamoDB.DocumentClient.ItemList
 
@@ -33,14 +40,17 @@ class MessageAttributesBackend {
         const Cuisine = this.Cuisine = MessageAttributes.Cuisine?.StringValue;
         const Location = this.Location = MessageAttributes.Location?.StringValue;
         const Name = this.Name = MessageAttributes.Name?.StringValue;
+        const NumberOfPeople = this.NumberOfPeople = MessageAttributes.NumberOfPeople?.StringValue;
+        const DiningDate = this.DiningDate = MessageAttributes.DiningDate?.StringValue;
+        const DiningTime = this.DiningTime = MessageAttributes.DiningTime?.StringValue;
         const PhoneNumber = this.PhoneNumber = MessageAttributes.PhoneNumber?.StringValue;
-        phoneNumberDedup = phoneNumberDedup ?? this.phoneNumberDedup
+        phoneNumberDedup = phoneNumberDedup ?? this.phoneNumberDedup;
 
         assert(PhoneNumber, 'ERR_MESSAGE_ATTR_PHONENUM');
         assert(!phoneNumberDedup?.has(PhoneNumber), 'ERR_PHONENUM_DUP');
         phoneNumberDedup?.add(PhoneNumber);
 
-        assert(Cuisine && Location && Name, 'ERR_MESSAGE_ATTR_MISC');
+        assert(Cuisine && Location && Name && NumberOfPeople && DiningDate && DiningTime, 'ERR_MESSAGE_ATTR_MISC');
 
         const { hits: { hits } } = await es.search({
             index: 'restaurants',
@@ -64,14 +74,14 @@ class MessageAttributesBackend {
     }
 
     async sendSMS() {
-        const { Responses, Name, Cuisine } = this;
+        const { Responses, Cuisine, NumberOfPeople, DiningDate, DiningTime } = this;
         const PhoneNumber = this.PhoneNumber && `+1${this.PhoneNumber}`
         assert(Responses, 'ERR_BACKEND_UNPROCESSED');
         assert(PhoneNumber, 'ERR_MESSAGE_ATTR_PHONENUM');
-        assert(Name && Cuisine, 'ERR_MESSAGE_ATTR_MISC');
+        assert(Cuisine && NumberOfPeople && DiningDate && DiningTime, 'ERR_MESSAGE_ATTR_MISC');
 
         const Message = [
-            `Hello! Here are my ${this.Cuisine} restaurant suggestions for you:`,
+            `Hello! Here are my ${Cuisine} restaurant suggestions for ${NumberOfPeople} people, for ${DiningDate} at ${DiningTime}:`,
             ...Responses
                 .sort((a, b) => b.Rating - a.Rating)
                 .map(({ Name, Rating, Address }, i) =>
