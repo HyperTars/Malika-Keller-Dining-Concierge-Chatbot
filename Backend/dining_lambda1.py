@@ -120,9 +120,9 @@ def validate_slots(location,cuisine_type,date,time,number_of_people,name,phone_n
 
 def send_sqs(slots):
     sqs.send_message(
-        QueueUrl=queue_url,
-        DelaySeconds=1,
-        MessageAttributes={
+        QueueUrl = queue_url,
+        DelaySeconds = 1,
+        MessageAttributes = {
             'Cuisine': {
                 'DataType': 'String',
                 'StringValue': slots['cuisine']
@@ -138,9 +138,21 @@ def send_sqs(slots):
             'PhoneNumber': {
                 'DataType': 'String',
                 'StringValue': slots['phone_number']
+            },
+            'NumberOfPeople': {
+                'DataType': 'String',
+                'StringValue': slots['number_of_people']
+            },
+            'DiningDate': {
+                'DataType': 'String',
+                'StringValue': slots['dinning_date']
+            },
+            'DiningTime': {
+                'DataType': 'String',
+                'StringValue': slots['dinning_time']
             }
         },
-        MessageBody=(
+        MessageBody = (
             'Restauraunt Request Information'
         )
     )
