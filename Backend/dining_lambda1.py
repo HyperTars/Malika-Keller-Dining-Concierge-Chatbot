@@ -4,97 +4,74 @@ import datetime
 import time
 import os
 import math
-import random
-import logging
 import boto3
-
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
-
 
 sqs = boto3.client('sqs')
 queue_url = 'https://sqs.us-east-1.amazonaws.com/178190676612/asg1-q1'
 
-
 def lambda_handler(event, context):
     os.environ['TZ'] = 'America/New_York'
     time.tzset()
-    logger.debug('event.bot.name={}'.format(event['bot']['name']))
-
     return dispatch(event)
     
 def dispatch(intent_request):
-    """
-    Called when the user specifies an intent for this bot.
-    """
-
-    logger.debug('dispatch userId={}, intentName={}'.format(intent_request['userId'], intent_request['currentIntent']['name']))
-
     intent_name = intent_request['currentIntent']['name']
 
-    # Dispatch to your bot's intent handlers
     if intent_name == 'DiningSuggestionsIntent':
-        return get_restaurant(intent_request)
+        location = get_slots(intent_request)["location"]
+        cuisine_type = get_slots(intent_request)["cuisine"]
+        date = get_slots(intent_request)["dinning_date"]
+        time = get_slots(intent_request)["dinning_time"]
+        number_of_people = get_slots(intent_request)["number_of_people"]
+        name = get_slots(intent_request)["name"]
+        phone_number = get_slots(intent_request)["phone_number"]
+
+        source = intent_request['invocationSource']
+        if source =='DialogCodeHook':
+            slots = get_slots(intent_request)
+            validation_result = validate_slots(location,cuisine_type,date,time,number_of_people,name,phone_number)
+            if not validation_result['isValid']:
+                slots[validation_result['violatedSlot']] = None
+                return elicit_slot(intent_request['sessionAttributes'],
+                                intent_request['currentIntent']['name'],
+                                slots,
+                                validation_result['violatedSlot'],
+                                validation_result['message'])
+            output_session_attributes = intent_request['sessionAttributes'] if intent_request['sessionAttributes'] is not None else {}
+
+            return delegate(output_session_attributes, get_slots(intent_request))
+            
+        slots = get_slots(intent_request)   
+        send_sqs(slots)
+        return close(intent_request['sessionAttributes'],
+                    'Fulfilled',
+                    {'contentType': 'PlainText',
+                    'content': 'Thank you! I will send some recommendations to the phone number: {} later.'.format(phone_number)})
+
+
     if intent_name == 'GreetingIntent':
-        return greeting(intent_request)
+        session_attributes = intent_request['sessionAttributes'] if intent_request['sessionAttributes'] is not None else {}
+        return elicit_intent(
+            session_attributes,
+            {
+                'contentType': 'PlainText',
+                'content': 'Hello! What can I help you?'
+            }
+        )
+
+
     if intent_name == 'ThankYouIntent':
-        return thanking(intent_request)
-    raise Exception('Intent with name ' + intent_name + ' not supported')
-    
-    
-    
-def thanking(intent_request):
-    session_attributes = intent_request['sessionAttributes'] if intent_request['sessionAttributes'] is not None else {}
-    return close(
-        session_attributes,
-        'Fulfilled',
-        {
-            'contentType': 'PlainText',
-            'content': 'Happy to help. Have a great day!'
-        }
-    )
-    
-def greeting(intent_request):
-    session_attributes = intent_request['sessionAttributes'] if intent_request['sessionAttributes'] is not None else {}
-    return elicit_intent(
-        session_attributes,
-        {
-            'contentType': 'PlainText',
-            'content': 'Hi! What can I help you today?'
-        }
-    )
+        session_attributes = intent_request['sessionAttributes'] if intent_request['sessionAttributes'] is not None else {}
+        return close(
+            session_attributes,
+            'Fulfilled',
+            {
+                'contentType': 'PlainText',
+                'content': 'Happy to help. Have a great day!'
+            }
+        )
 
-def get_restaurant(intent_request):
-    
-    location = get_slots(intent_request)["location"]
-    cuisine_type = get_slots(intent_request)["cuisine"]
-    date = get_slots(intent_request)["dinning_date"]
-    time = get_slots(intent_request)["dinning_time"]
-    number_of_people = get_slots(intent_request)["number_of_people"]
-    name = get_slots(intent_request)["name"]
-    phone_number = get_slots(intent_request)["phone_number"]
-
-    source = intent_request['invocationSource']
-    if source =='DialogCodeHook':
-        slots = get_slots(intent_request)
-        validation_result = validate_slots(location,cuisine_type,date,time,number_of_people,name,phone_number)
-        if not validation_result['isValid']:
-            slots[validation_result['violatedSlot']] = None
-            return elicit_slot(intent_request['sessionAttributes'],
-                              intent_request['currentIntent']['name'],
-                              slots,
-                              validation_result['violatedSlot'],
-                              validation_result['message'])
-        output_session_attributes = intent_request['sessionAttributes'] if intent_request['sessionAttributes'] is not None else {}
-
-        return delegate(output_session_attributes, get_slots(intent_request))
-        
-    slots = get_slots(intent_request)   
-    send_sqs(slots)
-    return close(intent_request['sessionAttributes'],
-                 'Fulfilled',
-                 {'contentType': 'PlainText',
-                  'content': 'Thank you! I have collected a few trendy options for you. I will send detailed information to your phone:{}'.format(phone_number)})
+    raise Exception(intent_name + ' is not supported!')    
 
 
 def validate_slots(location,cuisine_type,date,time,number_of_people,name,phone_number):
@@ -103,49 +80,46 @@ def validate_slots(location,cuisine_type,date,time,number_of_people,name,phone_n
     if location is not None and location.lower() not in manhattan_places:
         return build_validation_result(False,
                                        'location',
-                                       'We currently do not support {} as a valid destination. Please enter a neighborhood in Manhattan'.format(location))
+                                       'We currently do not support {} as destination. Please enter another neighborhood in Manhattan'.format(location))
         
     cuisines = ['italian', 'chinese', 'mexican', 'american', 'japanese', 'pizza', 'healthy', 'brunch', 'korean', 'thai', 'vietnamese', 'indian', 'seafood', 'dessert']
     if cuisine_type is not None and cuisine_type.lower() not in cuisines:
         return build_validation_result(False,
                                        'cuisine',
-                                       'We currently do not have any good options for {} food.  Can you try a different cuisine?'.format(cuisine_type))
+                                       'We currently do not support for {} food. Please enter another type of cuisine'.format(cuisine_type))
     if date is not None:
         if not isvalid_date(date):
-            return build_validation_result(False, 'dinning_date', 'I did not understand that, when would you like to have your meal?')
+            return build_validation_result(False, 'dinning_date', 'Invalid date! Sample input format: today')
         elif datetime.datetime.strptime(date, '%Y-%m-%d').date() < datetime.date.today():
-            return build_validation_result(False, 'dinning_date', 'Whoopsie! We\'re already past that date. Please enter a valid date!')
+            return build_validation_result(False, 'dinning_date', 'We have already passed this day! Please enter a valid date.')
     if time is not None:
         if len(time) != 5:
-            return build_validation_result(False, 'dinning_time', "Please input a valid time like 12:00.")
+            return build_validation_result(False, 'dinning_time', "Invalid time! Sample input format: 6pm.")
         for i in range(len(time)):
             if i == 2:
                 if time[i] != ":":
-                    return build_validation_result(False, 'dinning_time', "Please input a valid time like 12:00.")
+                    return build_validation_result(False, 'dinning_time', "Invalid time! Sample input format: 6pm.")
             else:
                 if not time[i].isalnum():
-                    return build_validation_result(False, 'dinning_time', "Please input a valid time like 12:00.")
+                    return build_validation_result(False, 'dinning_time', "Invalid time! Sample input format: 6pm.")
 
         hour, minute = time.split(':')
         hour = parse_int(hour)
         minute = parse_int(minute)
         if math.isnan(hour) or math.isnan(minute):
-            return build_validation_result(False, 'dinning_time', None)
-    # if name is  None:
-    #     return build_validation_result(False, 'name', "Please input a valid name.")
+            return build_validation_result(False, 'dinning_time', "Invalid time! Sample input format: 6pm.")
     if phone_number is not None:
         phone = phone_number.replace('-', '')
         if len(phone) != 10:
-            return build_validation_result(False, 'phone_number', "Please input a valid 10 digit phone number like 111-111-1111.")
+            return build_validation_result(False, 'phone_number', "Please enter a 10-digit phone number!")
         for i in phone:
             if not i.isalnum():
-                return build_validation_result(False, 'phone_number', "Please do not input non-number character for phone number.")
+                return build_validation_result(False, 'phone_number', "Please do not enter non-digit characters!")
 
     return build_validation_result(True, None, None)
 
-
 def send_sqs(slots):
-    response = sqs.send_message(
+    sqs.send_message(
         QueueUrl=queue_url,
         DelaySeconds=1,
         MessageAttributes={
@@ -176,7 +150,8 @@ def build_validation_result(is_valid, violated_slot, message_content):
     if message_content is None:
         return {
             "isValid": is_valid,
-            "violatedSlot": violated_slot}
+            "violatedSlot": violated_slot
+        }
     return {
         'isValid': is_valid,
         'violatedSlot': violated_slot,
@@ -196,8 +171,7 @@ def parse_int(n):
     try:
         return int(n)
     except ValueError:
-        return float('nan')
-        
+        return float('nan')    
 
 def elicit_slot(session_attributes, intent_name, slots, slot_to_elicit, message):
     return {
@@ -211,7 +185,6 @@ def elicit_slot(session_attributes, intent_name, slots, slot_to_elicit, message)
         }
     }
 
-
 def confirm_intent(session_attributes, intent_name, slots, message):
     return {
         'sessionAttributes': session_attributes,
@@ -223,9 +196,8 @@ def confirm_intent(session_attributes, intent_name, slots, message):
         }
     }
 
-
 def close(session_attributes, fulfillment_state, message):
-    response = {
+    return {
         'sessionAttributes': session_attributes,
         'dialogAction': {
             'type': 'Close',
@@ -233,9 +205,6 @@ def close(session_attributes, fulfillment_state, message):
             'message': message
         }
     }
-
-    return response
-
 
 def delegate(session_attributes, slots):
     return {
@@ -245,13 +214,12 @@ def delegate(session_attributes, slots):
             'slots': slots
         }
     }
+
 def elicit_intent(session_attributes, message):
-    response = {
+    return {
         'sessionAttributes': session_attributes,
         'dialogAction': {
             'type': 'ElicitIntent',
             'message': message
         }
     }
-
-    return response
