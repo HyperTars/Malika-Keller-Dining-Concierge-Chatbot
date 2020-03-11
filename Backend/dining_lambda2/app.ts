@@ -138,7 +138,10 @@ const handleLambda = async () => {
     // 2. no message => skip
     if (!Messages) return;
 
+	// 3. initialize phone number dedup set
     const phoneNumberDedup = new Set<string>();
+
+	// 4. process all messages simultaneously
     return Promise.all(Messages.map(async ({ MessageAttributes, ReceiptHandle }) => {
         const backend = new MessageAttributesBackend();
         try {
