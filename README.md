@@ -4,7 +4,7 @@ Malika Keller is a Dining Concierge Chatbot that sends you restaurant suggestion
 
 
 Developer:
-Wenzhou Li / wl2154
-Linyi Yan / ly1333
-Yixin Hu / yh3244
-Qi Li / ql1045
+Wenzhou Li - wl2154 /
+Linyi Yan - ly1333 /
+Yixin Hu - yh3244 /
+Qi Li - ql1045
