@@ -1,7 +1,7 @@
 # Overview
 
 - Collection: AWS-based serverless cloud applications
-    - [Malika Keller Dining Concierge Chatbot](https://github.com/HyperTars/Malika-Keller-Dining-Concierge-Chatbot)
+    - **[Malika Keller Dining Concierge Chatbot](https://github.com/HyperTars/Malika-Keller-Dining-Concierge-Chatbot)**
     - [Smart Door Authentication System](https://github.com/HyperTars/Smart-Door-Authentication-System)
     - [Voice Controlled Photo Search](https://github.com/HyperTars/Voice-Controlled-Photo-Search)
     - [Spam Tagging System](https://github.com/HyperTars/Spam-Tagging-System)
