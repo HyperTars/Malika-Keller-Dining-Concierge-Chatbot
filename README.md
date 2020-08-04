@@ -37,6 +37,7 @@
 - Then it will search through Elastic Search to get random suggestions of restaurant IDs with this cuisine.
 
 - Example Interaction
+
   **User: Hello**
   
   Bot: Hi there, how can I help?
@@ -74,7 +75,7 @@
   Bot: You’re welcome
 
 - User gets the following text message:
-  “Hello! Here are my Japanese restaurant suggestions for 2 people, for today at 7 pm: 1.
+  - “Hello! Here are my Japanese restaurant suggestions for 2 people, for today at 7 pm: 1.
   Sushi Nakazawa, located at 23 Commerce St, 2. Jin Ramen, located at 3183 Broadway,
   3. Nikko, located at 1280 Amsterdam Ave. Enjoy your meal!”
 
