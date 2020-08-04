@@ -82,6 +82,8 @@
             'Financial District, Manhattan': [10006, 10280, 10005, 10004]
             ```
             
-See full [Instructions](Instruction.pdf)
+- See full [Instructions](Instruction.pdf)
+
+- Architecture Diagram
 
 ![Overview](overview.png)
