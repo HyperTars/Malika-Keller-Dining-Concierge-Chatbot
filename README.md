@@ -2,6 +2,16 @@
 
 - Malika Keller is a Dining Concierge Chatbot that sends you restaurant suggestions given a set of preferences that you provide the chatbot with through conversation.
 
+- AWS service used:
+  - S3
+  - API Gateway
+  - Lambda
+  - Lex
+  - SQS
+  - SNS
+  - Elastic Search
+  - DynamoDB
+
 - Supporting Area: Manhattan (Data From Yelp)
   - AREA_ZIP = ```
             'Central Harlem, Manhattan': [10026, 10027, 10030, 10037, 10039],
